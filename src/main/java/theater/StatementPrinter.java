@@ -23,20 +23,14 @@ public class StatementPrinter {
      * @throws RuntimeException if one of the play types is not known
      */
     public String statement() {
-        int totalAmount = 0;
-        int volumeCredits = 0;
+        // REFACTOR: (Task 2.4) Moved totalAmount calculation to its own method
+        // REFACTOR: (Task 2.4) Moved volumeCredits calculation to its own method
         // FIX: Variable 'result' should be declared final.
         final StringBuilder result =
                 new StringBuilder("Statement for " + invoice.getCustomer() + System.lineSeparator());
 
-        // REFACTOR: (Task 2.3) Removed 'frmt' variable
-
+        // REFACTOR: (Task 2.4) This is the new loop, only for building the string
         for (final Performance p : invoice.getPerformances()) {
-
-            // --- THIS IS THE REFACTORED PART (Task 2.2) ---
-            volumeCredits += getVolumeCredits(p);
-            // ---------------------------------------------
-
             // print line for this order
             // REFACTOR: (Task 2.3) Use new usd() helper method
             result.append(String.format("  %s: %s (%s seats)%n",
@@ -44,13 +38,30 @@ public class StatementPrinter {
                     // REFACTOR: (Task 2.3) Call usd()
                     usd(getAmount(p)),
                     p.getAudience()));
-            // REFACTOR: (Task 2.1) Inlined 'thisAmount' variable
-            totalAmount += getAmount(p);
         }
-        // REFACTOR: (Task 2.3) Use new usd() helper method
-        result.append(String.format("Amount owed is %s%n", usd(totalAmount)));
-        result.append(String.format("You earned %s credits%n", volumeCredits));
+
+        // REFACTOR: (Task 2.4) Call new helper methods
+        result.append(String.format("Amount owed is %s%n", usd(getTotalAmount())));
+        result.append(String.format("You earned %s credits%n", getTotalVolumeCredits()));
         return result.toString();
+    }
+
+    // --- NEW HELPER METHOD (Task 2.4) ---
+    private int getTotalAmount() {
+        int result = 0;
+        for (final Performance p : invoice.getPerformances()) {
+            result += getAmount(p);
+        }
+        return result;
+    }
+
+    // --- NEW HELPER METHOD (Task 2.4) ---
+    private int getTotalVolumeCredits() {
+        int result = 0;
+        for (final Performance p : invoice.getPerformances()) {
+            result += getVolumeCredits(p);
+        }
+        return result;
     }
 
     // --- REFACTORED METHOD (Task 2.1, Step 4) ---
