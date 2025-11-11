@@ -29,8 +29,7 @@ public class StatementPrinter {
         final StringBuilder result =
                 new StringBuilder("Statement for " + invoice.getCustomer() + System.lineSeparator());
 
-        // FIX: Variable 'frmt' should be declared final.
-        final NumberFormat frmt = NumberFormat.getCurrencyInstance(Locale.US);
+        // REFACTOR: (Task 2.3) Removed 'frmt' variable
 
         for (final Performance p : invoice.getPerformances()) {
 
@@ -39,17 +38,17 @@ public class StatementPrinter {
             // ---------------------------------------------
 
             // print line for this order
-            // FIX: '100' is a magic number.
-            // REFACTOR: (Task 2.1) Inlined 'play' and 'thisAmount' variables
+            // REFACTOR: (Task 2.3) Use new usd() helper method
             result.append(String.format("  %s: %s (%s seats)%n",
                     getPlay(p).getName(),
-                    frmt.format(getAmount(p) / Constants.PERCENT_FACTOR),
+                    // REFACTOR: (Task 2.3) Call usd()
+                    usd(getAmount(p)),
                     p.getAudience()));
             // REFACTOR: (Task 2.1) Inlined 'thisAmount' variable
             totalAmount += getAmount(p);
         }
-        // FIX: '100' is a magic number.
-        result.append(String.format("Amount owed is %s%n", frmt.format(totalAmount / Constants.PERCENT_FACTOR)));
+        // REFACTOR: (Task 2.3) Use new usd() helper method
+        result.append(String.format("Amount owed is %s%n", usd(totalAmount)));
         result.append(String.format("You earned %s credits%n", volumeCredits));
         return result.toString();
     }
@@ -79,7 +78,6 @@ public class StatementPrinter {
                     result += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
                             + (Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
                             // FIX: Use getter from Performance.java
-                            // --- THIS IS THE CORRECTED LINE ---
                             * (performance.getAudience() - Constants.COMEDY_AUDIENCE_THRESHOLD));
                 }
                 // FIX: Use getter from Performance.java
@@ -94,7 +92,6 @@ public class StatementPrinter {
     }
 
     // --- NEW HELPER METHOD (Task 2.2) ---
-    // FIX: Renamed 'p' to 'performance' (Step 10)
     private int getVolumeCredits(Performance performance) {
         // FIX: Renamed local var to 'result' (Step 9)
         int result = 0;
@@ -105,6 +102,13 @@ public class StatementPrinter {
             result += performance.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
         }
         return result;
+    }
+
+    // --- NEW HELPER METHOD (Task 2.3) ---
+    private String usd(int amountInCents) {
+        // FIX: Renamed parameter to be descriptive
+        final NumberFormat frmt = NumberFormat.getCurrencyInstance(Locale.US);
+        return frmt.format(amountInCents / Constants.PERCENT_FACTOR);
     }
     // ------------------------------------
 
