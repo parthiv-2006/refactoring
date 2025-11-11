@@ -33,64 +33,77 @@ public class StatementPrinter {
         final NumberFormat frmt = NumberFormat.getCurrencyInstance(Locale.US);
 
         for (final Performance p : invoice.getPerformances()) {
-            // FIX: Variable 'play' should be declared final.
-            // FIX: Use getter from Performance.java
-            final Play play = plays.get(p.getPlayID());
-
-            int thisAmount = 0;
-            // FIX: Use getter from Play.java
-            switch (play.getType()) {
-                case "tragedy":
-                    // FIX: '40000' is a magic number.
-                    thisAmount = Constants.TRAGEDY_BASE_AMOUNT;
-                    // FIX: Use getter from Performance.java
-                    if (p.getAudience() > Constants.TRAGEDY_AUDIENCE_THRESHOLD) {
-                        // FIX: '1000' and '30' are magic numbers.
-                        // FIX: Use getter from Performance.java
-                        thisAmount += Constants.TRAGEDY_OVER_BASE_CAPACITY_PER_PERSON
-                                * (p.getAudience() - Constants.TRAGEDY_AUDIENCE_THRESHOLD);
-                    }
-                    break;
-                case "comedy":
-                    thisAmount = Constants.COMEDY_BASE_AMOUNT;
-                    // FIX: Use getter from Performance.java
-                    if (p.getAudience() > Constants.COMEDY_AUDIENCE_THRESHOLD) {
-                        thisAmount += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
-                                + (Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
-                                // FIX: Use getter from Performance.java
-                                * (p.getAudience() - Constants.COMEDY_AUDIENCE_THRESHOLD));
-                    }
-                    // FIX: Use getter from Performance.java
-                    thisAmount += Constants.COMEDY_AMOUNT_PER_AUDIENCE * p.getAudience();
-                    break;
-                default:
-                    // FIX: Use getter from Play.java
-                    throw new RuntimeException(String.format("unknown type: %s", play.getType()));
-            }
-
             // add volume credits
             // FIX: Use getter from Performance.java
             volumeCredits += Math.max(p.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
             // add extra credit for every five comedy attendees
             // FIX: 'if' construct must use '{}'.
             // FIX: Use getters from Play.java and Performance.java
-            if ("comedy".equals(play.getType())) {
+            // REFACTOR: (Task 2.1) Inlined 'play' variable
+            if ("comedy".equals(getPlay(p).getType())) {
                 volumeCredits += p.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
             }
 
             // print line for this order
-            // FIX: Use getter from Play.java
             // FIX: '100' is a magic number.
-            // FIX: Use getter from Performance.java
+            // REFACTOR: (Task 2.1) Inlined 'play' and 'thisAmount' variables
             result.append(String.format("  %s: %s (%s seats)%n",
-                    play.getName(),
-                    frmt.format(thisAmount / Constants.PERCENT_FACTOR),
+                    getPlay(p).getName(),
+                    frmt.format(getAmount(p) / Constants.PERCENT_FACTOR),
                     p.getAudience()));
-            totalAmount += thisAmount;
+            // REFACTOR: (Task 2.1) Inlined 'thisAmount' variable
+            totalAmount += getAmount(p);
         }
         // FIX: '100' is a magic number.
         result.append(String.format("Amount owed is %s%n", frmt.format(totalAmount / Constants.PERCENT_FACTOR)));
         result.append(String.format("You earned %s credits%n", volumeCredits));
         return result.toString();
     }
+
+    // --- REFACTORED METHOD (Task 2.1, Step 4) ---
+    // REFACTOR: Removed 'play' parameter
+    private int getAmount(Performance performance) {
+        // FIX: Renamed 'thisAmount' to 'result'
+        int result = 0;
+        // REFACTOR: Call getPlay() internally
+        // FIX: Use getter from Play.java
+        switch (getPlay(performance).getType()) {
+            case "tragedy":
+                // FIX: '40000' is a magic number.
+                result = Constants.TRAGEDY_BASE_AMOUNT;
+                // FIX: Use getter from Performance.java
+                if (performance.getAudience() > Constants.TRAGEDY_AUDIENCE_THRESHOLD) {
+                    // FIX: '1000' and '30' are magic numbers.
+                    // FIX: Use getter from Performance.java
+                    result += Constants.TRAGEDY_OVER_BASE_CAPACITY_PER_PERSON
+                            * (performance.getAudience() - Constants.TRAGEDY_AUDIENCE_THRESHOLD);
+                }
+                break;
+            case "comedy":
+                result = Constants.COMEDY_BASE_AMOUNT;
+                // FIX: Use getter from Performance.java
+                if (performance.getAudience() > Constants.COMEDY_AUDIENCE_THRESHOLD) {
+                    result += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
+                            + (Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
+                            // FIX: Use getter from Performance.java
+                            * (performance.getAudience() - Constants.COMEDY_AUDIENCE_THRESHOLD));
+                }
+                // FIX: Use getter from Performance.java
+                result += Constants.COMEDY_AMOUNT_PER_AUDIENCE * performance.getAudience();
+                break;
+            default:
+                // REFACTOR: Call getPlay() internally
+                // FIX: Use getter from Play.java
+                throw new RuntimeException(String.format("unknown type: %s", getPlay(performance).getType()));
+        }
+        return result;
+    }
+
+    // --- NEW HELPER METHOD (Task 2.1, Step 4) ---
+    // FIX: Renamed 'p' to 'performance' for CheckStyle
+    private Play getPlay(Performance performance) {
+        // FIX: Use getter from Performance.java
+        return plays.get(performance.getPlayID());
+    }
+    // ----------------------------------------------------
 }
