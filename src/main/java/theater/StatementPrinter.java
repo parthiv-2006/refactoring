@@ -33,16 +33,10 @@ public class StatementPrinter {
         final NumberFormat frmt = NumberFormat.getCurrencyInstance(Locale.US);
 
         for (final Performance p : invoice.getPerformances()) {
-            // add volume credits
-            // FIX: Use getter from Performance.java
-            volumeCredits += Math.max(p.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
-            // add extra credit for every five comedy attendees
-            // FIX: 'if' construct must use '{}'.
-            // FIX: Use getters from Play.java and Performance.java
-            // REFACTOR: (Task 2.1) Inlined 'play' variable
-            if ("comedy".equals(getPlay(p).getType())) {
-                volumeCredits += p.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
-            }
+
+            // --- THIS IS THE REFACTORED PART (Task 2.2) ---
+            volumeCredits += getVolumeCredits(p);
+            // ---------------------------------------------
 
             // print line for this order
             // FIX: '100' is a magic number.
@@ -61,7 +55,6 @@ public class StatementPrinter {
     }
 
     // --- REFACTORED METHOD (Task 2.1, Step 4) ---
-    // REFACTOR: Removed 'play' parameter
     private int getAmount(Performance performance) {
         // FIX: Renamed 'thisAmount' to 'result'
         int result = 0;
@@ -86,6 +79,7 @@ public class StatementPrinter {
                     result += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
                             + (Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
                             // FIX: Use getter from Performance.java
+                            // --- THIS IS THE CORRECTED LINE ---
                             * (performance.getAudience() - Constants.COMEDY_AUDIENCE_THRESHOLD));
                 }
                 // FIX: Use getter from Performance.java
@@ -99,11 +93,24 @@ public class StatementPrinter {
         return result;
     }
 
+    // --- NEW HELPER METHOD (Task 2.2) ---
+    // FIX: Renamed 'p' to 'performance' (Step 10)
+    private int getVolumeCredits(Performance performance) {
+        // FIX: Renamed local var to 'result' (Step 9)
+        int result = 0;
+        // add volume credits
+        result += Math.max(performance.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
+        // add extra credit for every five comedy attendees
+        if ("comedy".equals(getPlay(performance).getType())) {
+            result += performance.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+        }
+        return result;
+    }
+    // ------------------------------------
+
     // --- NEW HELPER METHOD (Task 2.1, Step 4) ---
-    // FIX: Renamed 'p' to 'performance' for CheckStyle
     private Play getPlay(Performance performance) {
         // FIX: Use getter from Performance.java
         return plays.get(performance.getPlayID());
     }
-    // ----------------------------------------------------
 }
